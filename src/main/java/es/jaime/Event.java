@@ -9,6 +9,6 @@ public interface Event extends Comparable<Event> {
 
     @Override
     default int compareTo(Event otherEvent) {
-        return otherEvent.getTimeOnCreated().compareTo(this.getTimeOnCreated());
+        return this.getTimeOnCreated().compareTo(otherEvent.getTimeOnCreated());
     }
 }

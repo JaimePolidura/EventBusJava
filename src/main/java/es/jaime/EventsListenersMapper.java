@@ -1,7 +1,10 @@
 package es.jaime;
 
 import com.google.common.collect.Sets;
+import javassist.URLClassPath;
 import org.reflections.Reflections;
+import org.reflections.scanners.MethodAnnotationsScanner;
+import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
 import java.lang.reflect.Method;
@@ -20,7 +23,8 @@ public class EventsListenersMapper {
 
     private void searchForListeners () {
         Reflections reflections = new Reflections(new ConfigurationBuilder()
-                .setScanners(new ));
+                .setScanners(new MethodAnnotationsScanner())
+                .setUrls(ClasspathHelper.forPackage("")));
 
         Set<Method> methodsListeners = reflections.getMethodsAnnotatedWith(EventListener.class);
 
@@ -31,17 +35,17 @@ public class EventsListenersMapper {
 
     private void checkPameters (Class<?>[] params, Method method) {
         for (Class<?> param : params) {
-            if(param.isAssignableFrom(Event.class)) { //Subtype of event}
-                addEventListener(method);
+            if(Event.class.isAssignableFrom(param)) { //Subtype of event}
+                addEventListener(method, (Class<? extends Event>) param);
             }
         }
     }
 
-    private void addEventListener(Method method) {
-        Set<Method> methodsFound = indexedEventListeners.get(method.getDeclaringClass());
+    private void addEventListener(Method method, Class<? extends Event> param) {
+        Set<Method> methodsFound = indexedEventListeners.get(param);
 
         if(methodsFound == null){
-            indexedEventListeners.put((Class<? extends Event>) method.getDeclaringClass(), Sets.newHashSet(method));
+            indexedEventListeners.put(param, Sets.newHashSet(method));
         }else{
             methodsFound.add(method);
         }
