@@ -35,7 +35,7 @@ public class EventsListenersMapper {
 
     private void checkParameters(Class<?>[] params, Method method) {
         for (Class<?> param : params) {
-            if(Event.class.isAssignableFrom(param)) { //Implements Event interface
+            if(Event.class.isAssignableFrom(param)) { //Subtype of event}
                 addEventListener(method, (Class<? extends Event>) param);
             }
         }

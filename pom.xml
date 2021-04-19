@@ -20,12 +20,23 @@
             <artifactId>guava</artifactId>
             <version>30.1-jre</version>
         </dependency>
+<<<<<<< HEAD
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.20</version>
             <scope>provided</scope>
         </dependency>
+=======
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.16</version>
+            <scope>provided</scope>
+        </dependency>
+
+>>>>>>> 40ba33c2c06d2a0c3ce4326dc1093a88548b0260
     </dependencies>
 
     <properties>
