@@ -1,7 +1,6 @@
 package es.jaime;
 
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
 

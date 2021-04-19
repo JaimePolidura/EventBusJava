@@ -1,6 +1,6 @@
 package es.jaime;
 
-import com.sun.istack.internal.NotNull;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
@@ -10,23 +10,19 @@ import java.util.concurrent.Executor;
 public final class EventBus implements Runnable {
     private final Queue<Event> eventQueue;
     private final EventsListenersMapper eventsListenersMapper;
-    private final Executor executor;
 
     public EventBus(Executor executor) {
-        this.executor = executor;
         this.eventsListenersMapper = new EventsListenersMapper();
         this.eventQueue = new PriorityQueue<>();
 
-        this.executor.execute(this);
+        executor.execute(this);
     }
 
-    public synchronized void publish (Collection<? extends Event> messages) {
-        Objects.requireNonNull(messages);
-
+    public synchronized void publish (@NonNull Collection<? extends Event> messages) {
         messages.forEach(this::publish);
     }
 
-    public synchronized void publish (@NotNull Event message) {
+    public synchronized void publish (@NonNull Event message) {
         this.eventQueue.add(message);
     }
 
@@ -34,11 +30,13 @@ public final class EventBus implements Runnable {
     @SneakyThrows
     public void run() {
         while (true) {
+            Event event = this.eventQueue.poll();
+
             if(event != null){
                 consumeEvent(event);
             }
 
-            Thread.sleep(1000);
+            Thread.sleep(1);
         }
     }
 
@@ -46,17 +44,11 @@ public final class EventBus implements Runnable {
     private void consumeEvent (Event event) {
         Set<EventListenerInfo> listeners = eventsListenersMapper.searchEventListeners(event.getClass());
 
-        for (Method listener : listeners) {
-            listener.invoke(listener.getDeclaringClass().newInstance(), event);
+        for (EventListenerInfo eventListenerInfo : listeners) {
+            Object instance = eventListenerInfo.instance;
+            Method method = eventListenerInfo.method;
+
+            method.invoke(instance, event);
         }
-
-        ack(event.getId());
-    }
-
-    private void ack (UUID uuid) {
-        eventQueue.forEach(event -> {
-            if(event.getId().equals(uuid))
-                this.eventQueue.remove(event);
-        });
     }
 }
