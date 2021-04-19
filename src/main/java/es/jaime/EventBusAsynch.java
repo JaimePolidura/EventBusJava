@@ -51,6 +51,14 @@ public final class EventBusAsynch implements Runnable, EventBus {
             Method method = eventListenerInfo.method;
 
             method.invoke(instance, event);
+
+            Class<?> superClass = instance.getClass().getSuperclass();
+            while (superClass != null || !Event.class.isAssignableFrom(superClass)) {
+                instance = eventListenerInfo.instance;
+                method = eventListenerInfo.method;
+
+                method.invoke(instance, event);
+            }
         }
     }
 }
