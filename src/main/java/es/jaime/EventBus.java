@@ -1,6 +1,6 @@
 package es.jaime;
 
-import com.sun.istack.internal.NotNull;
+import lombok.SneakyThrows;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -15,30 +15,39 @@ public final class EventBus implements Runnable {
         this.events = new PriorityQueue<>();
     }
 
-    public synchronized void publish (@NotNull Collection<? extends Event> messages) {
+    public synchronized void publish (Collection<? extends Event> messages) {
+        Objects.requireNonNull(messages);
+
         messages.forEach(this::publish);
     }
 
-    public synchronized void publish (@NotNull Event message) {
+    public synchronized void publish (Event message) {
+        Objects.requireNonNull(message);
+
         this.events.add(message);
     }
 
     @Override
+    @SneakyThrows
     public void run() {
-        for(;;) {
-            while (events.isEmpty());
+        while (true) {
+            Event event = events.poll();
 
-            consumeEvent(events.poll());
+            if(event != null){
+                this.consumeEvent(event);
+            }
+
+            Thread.sleep(1000);
         }
     }
 
     private void consumeEvent (Event event) {
-        Set<Method> listeners = eventsListenersMapper.searchEventListeners(event.getClass());
+        Set<EventListenerInfo> listeners = eventsListenersMapper.searchEventListeners(event.getClass());
 
         listeners.forEach(listener -> {
             try {
-                listener.invoke(event);
-            } catch (IllegalAccessException | InvocationTargetException e) {
+                listener.method.invoke(event);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });

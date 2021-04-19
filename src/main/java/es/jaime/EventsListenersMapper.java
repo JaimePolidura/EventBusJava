@@ -1,53 +1,62 @@
 package es.jaime;
 
 import com.google.common.collect.Sets;
+import lombok.SneakyThrows;
 import org.reflections.Reflections;
+import org.reflections.scanners.MethodAnnotationsScanner;
+import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class EventsListenersMapper {
-    private final Map<Class<? extends Event>, Set<Method>> indexedEventListeners;
+    private final Map<Class<? extends Event>, Set<EventListenerInfo>> indexedEventListeners;
+    private final Map<Class<?>, Object> instances;
 
     public EventsListenersMapper() {
         this.indexedEventListeners = new HashMap<>();
+        this.instances = new HashMap<>();
 
         this.searchForListeners();
     }
 
     private void searchForListeners () {
         Reflections reflections = new Reflections(new ConfigurationBuilder()
-                .setScanners(new ));
+                .setScanners(new MethodAnnotationsScanner())
+                .setUrls(ClasspathHelper.forPackage("")));
 
         Set<Method> methodsListeners = reflections.getMethodsAnnotatedWith(EventListener.class);
 
         for(Method method : methodsListeners) {
-            checkPameters(method.getParameterTypes(), method);
+            checkParameters(method.getParameterTypes(), method);
         }
     }
 
-    private void checkPameters (Class<?>[] params, Method method) {
+    private void checkParameters(Class<?>[] params, Method method) {
         for (Class<?> param : params) {
-            if(param.isAssignableFrom(Event.class)) { //Subtype of event}
-                addEventListener(method);
+            if(Event.class.isAssignableFrom(param)) { //Implements Event interface
+                addEventListener(method, (Class<? extends Event>) param);
             }
         }
     }
 
-    private void addEventListener(Method method) {
-        Set<Method> methodsFound = indexedEventListeners.get(method.getDeclaringClass());
+    @SneakyThrows
+    private void addEventListener(Method method, Class<? extends Event> param) {
+        Set<EventListenerInfo> methodsFound = indexedEventListeners.get(param);
 
-        if(methodsFound == null){
-            indexedEventListeners.put((Class<? extends Event>) method.getDeclaringClass(), Sets.newHashSet(method));
+        Object instance = this.instances.get(method.getDeclaringClass()) == null ?
+                method.getDeclaringClass().newInstance() :
+                this.instances.get(method.getDeclaringClass());
+
+        if(methodsFound == null || methodsFound.size() == 0){
+            indexedEventListeners.put(param, Sets.newHashSet(EventListenerInfo.of(instance, method)));
         }else{
-            methodsFound.add(method);
+            methodsFound.add(EventListenerInfo.of(instance, method));
         }
     }
 
-    public Set<Method> searchEventListeners (Class<? extends Event> event) {
+    public Set<EventListenerInfo> searchEventListeners (Class<? extends Event> event) {
         return this.indexedEventListeners.get(event);
     }
 }
