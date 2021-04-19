@@ -10,7 +10,7 @@ import org.reflections.util.ConfigurationBuilder;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class EventsListenersMapper {
+public final class EventsListenersMapper {
     private final Map<Class<? extends Event>, Set<EventListenerInfo>> indexedEventListeners;
     private final Map<Class<?>, Object> instances;
 
@@ -29,11 +29,11 @@ public class EventsListenersMapper {
         Set<Method> methodsListeners = reflections.getMethodsAnnotatedWith(EventListener.class);
 
         for(Method method : methodsListeners) {
-            checkParameters(method.getParameterTypes(), method);
+            checkParametersAndAdd(method.getParameterTypes(), method);
         }
     }
 
-    private void checkParameters(Class<?>[] params, Method method) {
+    private void checkParametersAndAdd(Class<?>[] params, Method method) {
         for (Class<?> param : params) {
             if(Event.class.isAssignableFrom(param)) { //Subtype of event}
                 addEventListener(method, (Class<? extends Event>) param);
