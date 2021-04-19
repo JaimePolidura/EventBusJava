@@ -14,17 +14,17 @@ public final class EventsListenersMapper {
     private final Map<Class<? extends Event>, Set<EventListenerInfo>> indexedEventListeners;
     private final Map<Class<?>, Object> instances;
 
-    public EventsListenersMapper() {
+    public EventsListenersMapper(String packageToScan) {
         this.indexedEventListeners = new HashMap<>();
         this.instances = new HashMap<>();
 
-        this.searchForListeners();
+        this.searchForListeners(packageToScan);
     }
 
-    private void searchForListeners () {
+    private void searchForListeners (String packageToScan) {
         Reflections reflections = new Reflections(new ConfigurationBuilder()
                 .setScanners(new MethodAnnotationsScanner())
-                .setUrls(ClasspathHelper.forPackage("")));
+                .setUrls(ClasspathHelper.forPackage(packageToScan)));
 
         Set<Method> methodsListeners = reflections.getMethodsAnnotatedWith(EventListener.class);
 

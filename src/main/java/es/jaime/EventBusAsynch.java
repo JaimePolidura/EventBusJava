@@ -11,8 +11,8 @@ public final class EventBusAsynch implements Runnable, EventBus {
     private final Queue<Event> eventQueue;
     private final EventsListenersMapper eventsListenersMapper;
 
-    public EventBusAsynch(Executor executor) {
-        this.eventsListenersMapper = new EventsListenersMapper();
+    public EventBusAsynch(Executor executor, String packageToScan) {
+        this.eventsListenersMapper = new EventsListenersMapper(packageToScan);
         this.eventQueue = new PriorityQueue<>();
 
         executor.execute(this);
@@ -48,6 +48,11 @@ public final class EventBusAsynch implements Runnable, EventBus {
 
         while (classEventCheck != null) {
             Set<EventListenerInfo> info = eventsListenersMapper.searchEventListeners(classEventCheck);
+
+            if(info == null || info.isEmpty()){
+                classEventCheck = (Class<? extends Event>) classEventCheck.getSuperclass();
+                continue;
+            }
 
             //Checking for event superclasses event listener
             for (EventListenerInfo eventListenerInfo : info) {
