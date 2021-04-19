@@ -1,14 +1,20 @@
 package es.jaime;
 
+import lombok.Getter;
+
 import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDateTime;
 import java.util.UUID;
 
-public interface Event extends Comparable<Event> {
-    UUID getId();
-    LocalDateTime getTimeOnCreated();
+public abstract class Event implements Comparable<Event> {
+    @Getter private final LocalDateTime timeOnCreated;
+
+    public Event () {
+        this.timeOnCreated = LocalDateTime.now();
+    }
 
     @Override
-    default int compareTo(Event otherEvent) {
-        return this.getTimeOnCreated().compareTo(otherEvent.getTimeOnCreated());
+    public int compareTo(Event o) {
+        return this.timeOnCreated.compareTo(o.getTimeOnCreated());
     }
 }
