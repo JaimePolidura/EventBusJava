@@ -1,7 +1,12 @@
-package es.jaime;
+package es.jaime.impl;
 
+import es.jaime.Event;
+import es.jaime.EventBus;
+import es.jaime.EventListenerInfo;
+import es.jaime.EventsListenersMapper;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.var;
 
 import java.lang.reflect.Method;
 import java.util.*;
