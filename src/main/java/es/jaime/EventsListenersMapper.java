@@ -53,9 +53,9 @@ public final class EventsListenersMapper {
         EventListener eventListenerInfo = this.getEventListenerAnnotationFromMethod(method);
 
         if(methodsFound == null || methodsFound.size() == 0){
-            indexedEventListeners.put(param, Sets.newHashSet(EventListenerInfo.of(instance, method, eventListenerInfo.interfaces())));
+            indexedEventListeners.put(param, Sets.newHashSet(EventListenerInfo.of(instance, method, eventListenerInfo.interfacesNeedToImplement())));
         }else{
-            methodsFound.add(EventListenerInfo.of(instance, method, eventListenerInfo.interfaces()));
+            methodsFound.add(EventListenerInfo.of(instance, method, eventListenerInfo.interfacesNeedToImplement()));
         }
     }
 
