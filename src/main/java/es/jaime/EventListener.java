@@ -1,12 +1,14 @@
 package es.jaime;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@Inherited
 public @interface EventListener {
-    Class<?>[] interfacesNeedToImplement() default {};
+    /**
+     * If you want a events that needs to implement an interface
+     * you can declare it in this array.
+     */
+    Class<?>[] value() default {};
 }

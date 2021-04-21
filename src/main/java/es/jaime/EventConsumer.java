@@ -39,7 +39,7 @@ public final class EventConsumer {
     }
 
     private boolean checkIfContainsInterface (Class<? extends Event> eventClass, Class<?>[] interfaces) {
-        if(interfaces == null || interfaces.length == 0 || interfaces[0] == Event.class){
+        if(interfaces == null || interfaces.length == 0){
             return true; //No interfaces
         }
 
