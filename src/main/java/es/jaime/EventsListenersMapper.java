@@ -9,6 +9,7 @@ import org.reflections.util.ConfigurationBuilder;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Stream;
 
 public final class EventsListenersMapper {
     private final Map<Class<? extends Event>, Set<EventListenerInfo>> indexedEventListeners;
@@ -49,11 +50,20 @@ public final class EventsListenersMapper {
                 method.getDeclaringClass().newInstance() :
                 this.instances.get(method.getDeclaringClass());
 
+        EventListener eventListenerInfo = this.getEventListenerAnnotationFromMethod(method);
+
         if(methodsFound == null || methodsFound.size() == 0){
-            indexedEventListeners.put(param, Sets.newHashSet(EventListenerInfo.of(instance, method)));
+            indexedEventListeners.put(param, Sets.newHashSet(EventListenerInfo.of(instance, method, eventListenerInfo.interfaces())));
         }else{
-            methodsFound.add(EventListenerInfo.of(instance, method));
+            methodsFound.add(EventListenerInfo.of(instance, method, eventListenerInfo.interfaces()));
         }
+    }
+
+    private EventListener getEventListenerAnnotationFromMethod (Method method) {
+        return (EventListener) Stream.of(method.getAnnotations())
+                .filter(annotation -> annotation instanceof EventListener)
+                .findAny()
+                .get();
     }
 
     public Set<EventListenerInfo> searchEventListeners (Class<? extends Event> event) {

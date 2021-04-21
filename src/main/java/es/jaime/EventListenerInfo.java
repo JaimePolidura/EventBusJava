@@ -8,8 +8,9 @@ import java.lang.reflect.Method;
 public final class EventListenerInfo {
     public final Object instance;
     public final Method method;
+    public final Class<?>[] interfaces;
 
-    public static EventListenerInfo of (Object instance, Method method) {
-        return new EventListenerInfo(instance, method);
+    public static EventListenerInfo of (Object instance, Method method, Class<?>[] interfaces) {
+        return new EventListenerInfo(instance, method, interfaces);
     }
 }

@@ -39,35 +39,11 @@ public final class EventBusAsynch implements Runnable, EventBus {
         while (true) {
             Event event = this.eventQueue.poll();
 
-            if(event != null){
-                consumeEvent(event);
+            if (event != null) {
+                consumeEvent(event, eventsListenersMapper);
             }
 
             Thread.sleep(1);
-        }
-    }
-
-    @SneakyThrows
-    private void consumeEvent (Event event) {
-        Class<? extends Event> classEventCheck = event.getClass();
-
-        while (classEventCheck != null) {
-            Set<EventListenerInfo> info = eventsListenersMapper.searchEventListeners(classEventCheck);
-
-            if(info == null || info.isEmpty()){
-                classEventCheck = (Class<? extends Event>) classEventCheck.getSuperclass();
-                continue;
-            }
-
-            //Checking for event superclasses event listener
-            for (EventListenerInfo eventListenerInfo : info) {
-                Object instance = eventListenerInfo.instance;
-                Method method = eventListenerInfo.method;
-
-                method.invoke(instance, event);
-            }
-
-            classEventCheck = (Class<? extends Event>) classEventCheck.getSuperclass();
         }
     }
 }
