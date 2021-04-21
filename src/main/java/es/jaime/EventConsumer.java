@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -12,12 +14,15 @@ public final class EventConsumer {
 
     @SneakyThrows
     public void consume (Event event) {
+        Set<Class<?>> interfacesAccumulator = new HashSet<>();
+
         Class<? extends Event> classEventCheck = event.getClass();
 
         while (classEventCheck != null) {
             Set<EventListenerInfo> info = mapper.searchEventListeners(classEventCheck);
 
             if(info == null || info.isEmpty()){
+                interfacesAccumulator.addAll(Arrays.asList(classEventCheck.getInterfaces()));
                 classEventCheck = (Class<? extends Event>) classEventCheck.getSuperclass();
                 continue;
             }
@@ -28,7 +33,7 @@ public final class EventConsumer {
                 Method method = eventListenerInfo.method;
                 Class<?>[] interfaces = eventListenerInfo.interfacesNeedToImplement;
 
-                if(checkIfContainsInterface(event.getClass(), interfaces)){
+                if(checkIfContainsInterface(event.getClass(), interfaces, interfacesAccumulator)){
                     method.invoke(instance, event);
                 }
 
@@ -38,18 +43,18 @@ public final class EventConsumer {
         }
     }
 
-    private boolean checkIfContainsInterface (Class<? extends Event> eventClass, Class<?>[] interfaces) {
+    private boolean checkIfContainsInterface (Class<? extends Event> eventClass, Class<?>[] interfaces, Set<Class<?>> otherInterfaces) {
         if(interfaces == null || interfaces.length == 0){
             return true; //No interfaces
         }
 
         Class<?>[] eventClassInterfaces = eventClass.getInterfaces();
 
-        for (Class<?> interfaceEventToCheck : eventClassInterfaces) {
-            for (Class<?> anInterface : interfaces) {
-                if (interfaceEventToCheck == anInterface) {
-                    return true;
-                }
+        otherInterfaces.addAll(Arrays.asList(eventClassInterfaces));
+
+        for(Class<?> interfaceToCheck : interfaces){
+            if(otherInterfaces.contains(interfaceToCheck)){
+                return true;
             }
         }
 
