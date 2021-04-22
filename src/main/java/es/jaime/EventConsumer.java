@@ -18,11 +18,12 @@ public final class EventConsumer {
 
         Class<? extends Event> classEventCheck = event.getClass();
 
-        while (classEventCheck != null) {
+        while (classEventCheck != null && !classEventCheck.equals(Object.class)) {
             Set<EventListenerInfo> info = mapper.searchEventListeners(classEventCheck);
 
+            interfacesAccumulator.addAll(Arrays.asList(classEventCheck.getInterfaces()));
+
             if(info == null || info.isEmpty()){
-                interfacesAccumulator.addAll(Arrays.asList(classEventCheck.getInterfaces()));
                 classEventCheck = (Class<? extends Event>) classEventCheck.getSuperclass();
                 continue;
             }
@@ -33,7 +34,7 @@ public final class EventConsumer {
                 Method method = eventListenerInfo.method;
                 Class<?>[] interfaces = eventListenerInfo.interfacesNeedToImplement;
 
-                if(checkIfContainsInterface(event.getClass(), interfaces, interfacesAccumulator)){
+                if(checkIfContainsInterface(interfaces, interfacesAccumulator)){
                     method.invoke(instance, event);
                 }
 
@@ -43,17 +44,13 @@ public final class EventConsumer {
         }
     }
 
-    private boolean checkIfContainsInterface (Class<? extends Event> eventClass, Class<?>[] interfaces, Set<Class<?>> otherInterfaces) {
-        if(interfaces == null || interfaces.length == 0){
+    private boolean checkIfContainsInterface (Class<?>[] interfacesToImplement, Set<Class<?>> interfaceAccumulator) {
+        if(interfacesToImplement == null || interfacesToImplement.length == 0){
             return true; //No interfaces
         }
 
-        Class<?>[] eventClassInterfaces = eventClass.getInterfaces();
-
-        otherInterfaces.addAll(Arrays.asList(eventClassInterfaces));
-
-        for(Class<?> interfaceToCheck : interfaces){
-            if(otherInterfaces.contains(interfaceToCheck)){
+        for(Class<?> interfaceToCheck : interfacesToImplement){
+            if(interfaceAccumulator.contains(interfaceToCheck)){
                 return true;
             }
         }
