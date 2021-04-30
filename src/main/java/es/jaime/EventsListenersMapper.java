@@ -1,6 +1,5 @@
 package es.jaime;
 
-import com.google.common.collect.Sets;
 import lombok.SneakyThrows;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
@@ -12,7 +11,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public final class EventsListenersMapper {
-    private final Map<Class<? extends Event>, Set<EventListenerInfo>> indexedEventListeners;
+    private final Map<Class<? extends Event>, List<EventListenerInfo>> indexedEventListeners;
     private final Map<Class<?>, Object> instances;
 
     public EventsListenersMapper(String packageToScan) {
@@ -32,6 +31,8 @@ public final class EventsListenersMapper {
         for(Method method : methodsListeners) {
             checkParametersAndAdd(method.getParameterTypes(), method);
         }
+
+        sortEventListenerInfoByPriority();
     }
 
     private void checkParametersAndAdd(Class<?>[] params, Method method) {
@@ -42,9 +43,15 @@ public final class EventsListenersMapper {
         }
     }
 
+    private void sortEventListenerInfoByPriority () {
+        for(Map.Entry<Class<? extends Event>, List<EventListenerInfo>> entry : indexedEventListeners.entrySet()){
+            entry.getValue().sort(EventListenerInfo::compareTo);
+        }
+    }
+
     @SneakyThrows
-    private void addEventListener(Method method, Class<? extends Event> param) {
-        Set<EventListenerInfo> methodsFound = indexedEventListeners.get(param);
+    private void addEventListener(Method method, Class<? extends Event> event) {
+        List<EventListenerInfo> methodsFound = indexedEventListeners.get(event);
 
         Object instance = this.instances.get(method.getDeclaringClass()) == null ?
                 method.getDeclaringClass().newInstance() :
@@ -53,9 +60,12 @@ public final class EventsListenersMapper {
         EventListener eventListenerInfo = this.getEventListenerAnnotationFromMethod(method);
 
         if(methodsFound == null || methodsFound.size() == 0){
-            indexedEventListeners.put(param, Sets.newHashSet(EventListenerInfo.of(instance, method, eventListenerInfo.value())));
+            List<EventListenerInfo> list = new LinkedList<>();
+            list.add(EventListenerInfo.of(instance, method, eventListenerInfo.value(), eventListenerInfo.pritority()));
+
+            indexedEventListeners.put(event, list);
         }else{
-            methodsFound.add(EventListenerInfo.of(instance, method, eventListenerInfo.value()));
+            methodsFound.add(EventListenerInfo.of(instance, method, eventListenerInfo.value(), eventListenerInfo.pritority()));
         }
     }
 
@@ -66,7 +76,7 @@ public final class EventsListenersMapper {
                 .get();
     }
 
-    public Set<EventListenerInfo> searchEventListeners (Class<? extends Event> event) {
+    public List<EventListenerInfo> searchEventListeners (Class<? extends Event> event) {
         return this.indexedEventListeners.get(event);
     }
 }

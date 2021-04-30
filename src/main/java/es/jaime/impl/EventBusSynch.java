@@ -2,8 +2,9 @@ package es.jaime.impl;
 
 import es.jaime.Event;
 import es.jaime.EventBus;
-import es.jaime.EventConsumer;
 import es.jaime.EventsListenersMapper;
+import es.jaime.EventConsumer;
+
 import lombok.NonNull;
 
 import java.util.Collection;

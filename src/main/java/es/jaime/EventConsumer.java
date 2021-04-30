@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -19,7 +20,7 @@ public final class EventConsumer {
         Class<? extends Event> classEventCheck = event.getClass();
 
         while (classEventCheck != null && !classEventCheck.equals(Object.class)) {
-            Set<EventListenerInfo> info = mapper.searchEventListeners(classEventCheck);
+            List<EventListenerInfo> info = mapper.searchEventListeners(classEventCheck);
 
             interfacesAccumulator.addAll(Arrays.asList(classEventCheck.getInterfaces()));
 
@@ -48,7 +49,7 @@ public final class EventConsumer {
         if(interfacesToImplement == null || interfacesToImplement.length == 0){
             return true; //No interfaces
         }
-
+        
         for(Class<?> interfaceToCheck : interfacesToImplement){
             if(interfaceAccumulator.contains(interfaceToCheck)){
                 return true;
