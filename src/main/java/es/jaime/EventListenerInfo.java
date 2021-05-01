@@ -8,15 +8,15 @@ import java.lang.reflect.Method;
 public final class EventListenerInfo implements Comparable<EventListenerInfo>{
     public final Object instance;
     public final Method method;
-    public final Class<?>[] interfacesNeedToImplement;
-    public final Priority priority;
+    public final EventListener eventListenerAnnotation;
 
-    public static EventListenerInfo of (Object instance, Method method, Class<?>[] interfacesNeedToImplement, Priority priority) {
-        return new EventListenerInfo(instance, method, interfacesNeedToImplement, priority);
+    public static EventListenerInfo of (Object instance, Method method, EventListener eventListenerAnnotation) {
+        return new EventListenerInfo(instance, method, eventListenerAnnotation);
     }
 
     @Override
     public int compareTo(EventListenerInfo o) {
-        return Integer.compare(o.priority.value, this.priority.value);
+        return Integer.compare(o.eventListenerAnnotation.pritority().value,
+                this.eventListenerAnnotation.pritority().value);
     }
 }

@@ -12,11 +12,11 @@ import java.util.stream.Stream;
 
 public final class EventsListenersMapper {
     private final Map<Class<? extends Event>, List<EventListenerInfo>> indexedEventListeners;
-    private final Map<Class<?>, Object> instances;
+    private final Map<Class<?>, Object> alreadyInstanciedEventListeners;
 
     public EventsListenersMapper(String packageToScan) {
         this.indexedEventListeners = new HashMap<>();
-        this.instances = new HashMap<>();
+        this.alreadyInstanciedEventListeners = new HashMap<>();
 
         this.searchForListeners(packageToScan);
     }
@@ -37,7 +37,7 @@ public final class EventsListenersMapper {
 
     private void checkParametersAndAdd(Class<?>[] params, Method method) {
         for (Class<?> param : params) {
-            if(Event.class.isAssignableFrom(param)) { //Subtype of event}
+            if(Event.class.isAssignableFrom(param)) { //Subtype of event
                 addEventListener(method, (Class<? extends Event>) param);
             }
         }
@@ -51,21 +51,21 @@ public final class EventsListenersMapper {
 
     @SneakyThrows
     private void addEventListener(Method method, Class<? extends Event> event) {
-        List<EventListenerInfo> methodsFound = indexedEventListeners.get(event);
-
-        Object instance = this.instances.get(method.getDeclaringClass()) == null ?
+        Object instance = this.alreadyInstanciedEventListeners.get(method.getDeclaringClass()) == null ?
                 method.getDeclaringClass().newInstance() :
-                this.instances.get(method.getDeclaringClass());
+                this.alreadyInstanciedEventListeners.get(method.getDeclaringClass());
 
         EventListener eventListenerInfo = this.getEventListenerAnnotationFromMethod(method);
 
-        if(methodsFound == null || methodsFound.size() == 0){
+        List<EventListenerInfo> eventListeners = indexedEventListeners.get(event);
+
+        if(eventListeners == null || eventListeners.size() == 0){
             List<EventListenerInfo> list = new LinkedList<>();
-            list.add(EventListenerInfo.of(instance, method, eventListenerInfo.value(), eventListenerInfo.pritority()));
+            list.add(EventListenerInfo.of(instance, method, eventListenerInfo));
 
             indexedEventListeners.put(event, list);
         }else{
-            methodsFound.add(EventListenerInfo.of(instance, method, eventListenerInfo.value(), eventListenerInfo.pritority()));
+            eventListeners.add(EventListenerInfo.of(instance, method, eventListenerInfo));
         }
     }
 

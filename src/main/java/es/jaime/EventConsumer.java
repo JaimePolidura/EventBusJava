@@ -1,31 +1,54 @@
 package es.jaime;
 
-import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
-@AllArgsConstructor
 public final class EventConsumer {
     private final EventsListenersMapper mapper;
+    private final EventListenerCache cache;
+
+    public EventConsumer(EventsListenersMapper mapper) {
+        this.mapper = mapper;
+        this.cache = new EventListenerCache();
+    }
 
     @SneakyThrows
     public void consume (Event event) {
+        Class<? extends Event> classEvent = event.getClass();
+
+        if(cache.isCached(classEvent)){
+            executeWhatItIsInCache(event);
+        }else {
+            executeEventAndAddCache(event);
+        }
+    }
+
+    @SneakyThrows
+    private void executeWhatItIsInCache (Event event) {
+        List<EventListenerInfo> eventListeners = cache.get(event.getClass());
+
+        for (EventListenerInfo eventListener : eventListeners) {
+            eventListener.method.invoke(eventListener.instance, event);
+        }
+    }
+
+    @SneakyThrows
+    private void executeEventAndAddCache(Event event) {
+        List<EventListenerInfo> listenersToAddInCache = new LinkedList<>();
+
+        Class<? extends Event> classEvent = event.getClass();
         Set<Class<?>> interfacesAccumulator = new HashSet<>();
 
-        Class<? extends Event> classEventCheck = event.getClass();
+        while (classEvent != null && !classEvent.equals(Object.class)) {
+            List<EventListenerInfo> info = mapper.searchEventListeners(classEvent);
 
-        while (classEventCheck != null && !classEventCheck.equals(Object.class)) {
-            List<EventListenerInfo> info = mapper.searchEventListeners(classEventCheck);
-
-            interfacesAccumulator.addAll(Arrays.asList(classEventCheck.getInterfaces()));
+            interfacesAccumulator.addAll(Arrays.asList(classEvent.getInterfaces()));
 
             if(info == null || info.isEmpty()){
-                classEventCheck = (Class<? extends Event>) classEventCheck.getSuperclass();
+                classEvent = (Class<? extends Event>) classEvent.getSuperclass();
                 continue;
             }
 
@@ -33,15 +56,17 @@ public final class EventConsumer {
             for (EventListenerInfo eventListenerInfo : info) {
                 Object instance = eventListenerInfo.instance;
                 Method method = eventListenerInfo.method;
-                Class<?>[] interfaces = eventListenerInfo.interfacesNeedToImplement;
+                Class<?>[] interfaces = eventListenerInfo.eventListenerAnnotation.value();
 
                 if(checkIfContainsInterface(interfaces, interfacesAccumulator)){
                     method.invoke(instance, event);
+
+                    listenersToAddInCache.add(eventListenerInfo);
                 }
 
             }
 
-            classEventCheck = (Class<? extends Event>) classEventCheck.getSuperclass();
+            classEvent = (Class<? extends Event>) classEvent.getSuperclass();
         }
     }
 
@@ -49,13 +74,8 @@ public final class EventConsumer {
         if(interfacesToImplement == null || interfacesToImplement.length == 0){
             return true; //No interfaces
         }
-        
-        for(Class<?> interfaceToCheck : interfacesToImplement){
-            if(interfaceAccumulator.contains(interfaceToCheck)){
-                return true;
-            }
-        }
 
-        return false;
+        return Stream.of(interfacesToImplement)
+                .anyMatch(interfaceAccumulator::contains);
     }
 }
