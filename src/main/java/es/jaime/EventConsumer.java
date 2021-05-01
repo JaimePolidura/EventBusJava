@@ -68,6 +68,8 @@ public final class EventConsumer {
 
             classEvent = (Class<? extends Event>) classEvent.getSuperclass();
         }
+
+        cache.put(classEvent, listenersToAddInCache);
     }
 
     private boolean checkIfContainsInterface (Class<?>[] interfacesToImplement, Set<Class<?>> interfaceAccumulator) {
