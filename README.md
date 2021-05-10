@@ -39,7 +39,7 @@ EventBus asynchEventBus = new EventBusAsynch(Executors.newSingleThreadExecutor()
 asynchEventBus.publish(new GameTimedOutEvent("team 1", "team 2"));
 ```
 
-## SUBSCRIBE
+## LISTENERS
 
 Each event listener will be represented by a method. To make this possible, the methods needs:
 
@@ -54,6 +54,7 @@ public void on(GameTimedOutEvent event) {
     System.out.printf("Game has ended beacause of time out %s %s", event.getTeam1(), event.getTeam2());
 }
 ```
+### LISTEN TO MAIN CLASS
 
 If you want to listen a main class event. You can simply put the main class name in the mehtods para. Ex
 
@@ -65,6 +66,8 @@ public void on(A event) {
     //It will listen all events of type and subtype of A
 }
 ```
+
+### PRIORITY
 
 An event listener can have a priority. This priority will determine the order that it will get executed.
 
@@ -79,6 +82,8 @@ public void on(A event) {
     //It will be executed the first one
 }
 ```
+### LISTEN INTERFACES
+
 An event listener can listen an event that needs to implement a certain (or various) interface.
 
 Consider A implements DBTransaction interface
