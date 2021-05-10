@@ -1,6 +1,6 @@
 # EventBusJava
 
-This library provides a way to publish your own events and subscribe to them in a easy way.
+This library provides a way to publish your own events and subscribe to them in a easy and powerful way.
 
 ## SET UP
 
