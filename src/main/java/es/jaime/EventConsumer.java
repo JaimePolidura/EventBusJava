@@ -36,7 +36,6 @@ public final class EventConsumer {
     }
 
     private void executeEventAndAddCache(Event event) {
-        List<EventListenerInfo> listenersToAddInCache = new LinkedList<>();
         Class<? extends Event> classEventToCheck = event.getClass();
         Set<Class<?>> interfacesAccumulator = new HashSet<>();
 
@@ -51,17 +50,14 @@ public final class EventConsumer {
                 continue;
             }
 
-            executeEventListeners(event, eventListeners, interfacesAccumulator, listenersToAddInCache);
+            executeEventListeners(event, eventListeners, interfacesAccumulator);
 
             classEventToCheck = (Class<? extends Event>) classEventToCheck.getSuperclass();
         }
-
-        cache.put(classEventToCheck, listenersToAddInCache);
     }
 
     @SneakyThrows
-    private void executeEventListeners (Event event, List<EventListenerInfo> eventListenerInfos, Set<Class<?>> interfacesAccumulator,
-                                        List<EventListenerInfo> listenersToAddInCache) {
+    private void executeEventListeners (Event event, List<EventListenerInfo> eventListenerInfos, Set<Class<?>> interfacesAccumulator) {
         for (EventListenerInfo eventListenerInfo : eventListenerInfos) {
             Object instance = eventListenerInfo.instance;
             Method method = eventListenerInfo.method;
@@ -70,7 +66,7 @@ public final class EventConsumer {
             if(notInterfacesNeeded(interfaces) || containsNeededInterfaces(interfaces, interfacesAccumulator)){
                 method.invoke(instance, event);
 
-                listenersToAddInCache.add(eventListenerInfo);
+                cache.put(event.getClass(), eventListenerInfo);
             }
         }
     }
