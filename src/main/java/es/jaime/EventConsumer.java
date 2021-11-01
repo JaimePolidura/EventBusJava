@@ -35,49 +35,51 @@ public final class EventConsumer {
         }
     }
 
-    @SneakyThrows
     private void executeEventAndAddCache(Event event) {
         List<EventListenerInfo> listenersToAddInCache = new LinkedList<>();
-
-        Class<? extends Event> classEvent = event.getClass();
+        Class<? extends Event> classEventToCheck = event.getClass();
         Set<Class<?>> interfacesAccumulator = new HashSet<>();
 
-        while (classEvent != null && !classEvent.equals(Object.class)) {
-            List<EventListenerInfo> info = mapper.searchEventListeners(classEvent);
+        //class event not null && class not equals objecy (we wanna iterate over all events super classes)
+        while (classEventToCheck != null && !classEventToCheck.equals(Object.class)) {
+            List<EventListenerInfo> eventListeners = mapper.searchEventListeners(classEventToCheck);
 
-            interfacesAccumulator.addAll(Arrays.asList(classEvent.getInterfaces()));
+            interfacesAccumulator.addAll(Arrays.asList(classEventToCheck.getInterfaces()));
 
-            if(info == null || info.isEmpty()){
-                classEvent = (Class<? extends Event>) classEvent.getSuperclass();
+            if(eventListeners == null || eventListeners.isEmpty()){
+                classEventToCheck = (Class<? extends Event>) classEventToCheck.getSuperclass();
                 continue;
             }
 
-            //Checking for event superclasses event listener
-            for (EventListenerInfo eventListenerInfo : info) {
-                Object instance = eventListenerInfo.instance;
-                Method method = eventListenerInfo.method;
-                Class<?>[] interfaces = eventListenerInfo.eventListenerAnnotation.value();
+            executeEventListeners(event, eventListeners, interfacesAccumulator, listenersToAddInCache);
 
-                if(checkIfContainsInterface(interfaces, interfacesAccumulator)){
-                    method.invoke(instance, event);
-
-                    listenersToAddInCache.add(eventListenerInfo);
-                }
-
-            }
-
-            classEvent = (Class<? extends Event>) classEvent.getSuperclass();
+            classEventToCheck = (Class<? extends Event>) classEventToCheck.getSuperclass();
         }
 
-        cache.put(classEvent, listenersToAddInCache);
+        cache.put(classEventToCheck, listenersToAddInCache);
     }
 
-    private boolean checkIfContainsInterface (Class<?>[] interfacesToImplement, Set<Class<?>> interfaceAccumulator) {
-        if(interfacesToImplement == null || interfacesToImplement.length == 0){
-            return true; //No interfaces
-        }
+    @SneakyThrows
+    private void executeEventListeners (Event event, List<EventListenerInfo> eventListenerInfos, Set<Class<?>> interfacesAccumulator,
+                                        List<EventListenerInfo> listenersToAddInCache) {
+        for (EventListenerInfo eventListenerInfo : eventListenerInfos) {
+            Object instance = eventListenerInfo.instance;
+            Method method = eventListenerInfo.method;
+            Class<?>[] interfaces = eventListenerInfo.eventListenerAnnotation.value();
 
-        return Stream.of(interfacesToImplement)
-                .anyMatch(interfaceAccumulator::contains);
+            if(notInterfacesNeeded(interfaces) || containsNeededInterfaces(interfaces, interfacesAccumulator)){
+                method.invoke(instance, event);
+
+                listenersToAddInCache.add(eventListenerInfo);
+            }
+        }
+    }
+
+    private boolean notInterfacesNeeded (Class<?>[] interfacesToImplement) {
+        return interfacesToImplement == null || interfacesToImplement.length == 0;
+    }
+
+    private boolean containsNeededInterfaces(Class<?>[] interfacesToImplement, Set<Class<?>> interfaceAccumulator) {
+        return Stream.of(interfacesToImplement).anyMatch(interfaceAccumulator::contains);
     }
 }
