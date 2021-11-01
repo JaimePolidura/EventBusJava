@@ -1,4 +1,4 @@
-package es.jaime.classstrocture2test;
+package es.jaime.classstrocture2test.simple;
 
 import es.jaime.Event;
 import lombok.AllArgsConstructor;

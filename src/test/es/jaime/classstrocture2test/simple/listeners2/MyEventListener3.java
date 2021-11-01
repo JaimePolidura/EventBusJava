@@ -1,18 +1,15 @@
-package es.jaime.classstrocture2test.eventlisteners.package1;
+package es.jaime.classstrocture2test.simple.listeners2;
 
 import es.jaime.EventListener;
-import es.jaime.classstrocture2test.MyEvent;
+import es.jaime.Priority;
+import es.jaime.classstrocture2test.simple.MyEvent;
 import es.jaime.classstrocture2test.MyEventListener;
 
-public final class MyEventListener2 extends MyEventListener {
+public final class MyEventListener3 extends MyEventListener {
     private boolean eventRaised;
 
-    public MyEventListener2() {
-        this.eventRaised = false;
-    }
-
-    @EventListener
-    public void onMyEvent1(MyEvent myEvent) {
+    @EventListener(pritority = Priority.HIGH)
+    public void onMyEvent(MyEvent myEvent) {
         this.eventRaised = true;
     }
 

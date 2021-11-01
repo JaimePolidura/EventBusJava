@@ -1,7 +1,7 @@
 package es.jaime;
 
-import es.jaime.classstrocture2test.MyEvent;
-import es.jaime.classstrocture2test.MyInterface;
+import es.jaime.classstrocture2test.simple.MyEvent;
+import es.jaime.classstrocture2test.simple.MyInterface;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -9,13 +9,13 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-public final class EventListenerMapperTest {
+public final class EventListenerMapperSimpleTest {
     private EventsListenersMapper eventListenerMapper;
     private List<EventListenerInfo> eventListenerInfosForMyEvent;
 
     @Before
     public void setUp() {
-        this.eventListenerMapper = new EventsListenersMapper("es.jaime.classstrocture2test.eventlisteners");
+        this.eventListenerMapper = new EventsListenersMapper("es.jaime.classstrocture2test");
         this.eventListenerInfosForMyEvent = eventListenerMapper.searchEventListeners(MyEvent.class);
     }
 

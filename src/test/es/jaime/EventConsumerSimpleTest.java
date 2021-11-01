@@ -1,8 +1,7 @@
 package es.jaime;
 
-import es.jaime.classstrocture2test.MyEvent;
+import es.jaime.classstrocture2test.simple.MyEvent;
 import es.jaime.classstrocture2test.MyEventListener;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -11,13 +10,13 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-public final class EventConsumerTest {
+public final class EventConsumerSimpleTest {
     private EventConsumer eventConsumer;
     private List<MyEventListener> eventListeners;
 
     @Before
     public void setUp() {
-        EventsListenersMapper mapper = new EventsListenersMapper("es.jaime.classstrocture2test.eventlisteners");
+        EventsListenersMapper mapper = new EventsListenersMapper("es.jaime.classstrocture2test");
 
         List<MyEventListener> eventListeners = new ArrayList<>();
         for (EventListenerInfo eventListenerInfo : mapper.searchEventListeners(MyEvent.class)) {
