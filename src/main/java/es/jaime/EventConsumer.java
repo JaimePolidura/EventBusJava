@@ -38,19 +38,15 @@ public final class EventConsumer {
     private void executeEventAndAddCache(Event event) {
         Class<? extends Event> classEventToCheck = event.getClass();
         Set<Class<?>> interfacesAccumulator = new HashSet<>();
-
+        
         //class event not null && class not equals objecy (we wanna iterate over all events super classes)
         while (classEventToCheck != null && !classEventToCheck.equals(Object.class)) {
+            interfacesAccumulator.addAll(Arrays.asList(classEventToCheck.getInterfaces()));
             List<EventListenerInfo> eventListeners = mapper.searchEventListeners(classEventToCheck);
 
-            interfacesAccumulator.addAll(Arrays.asList(classEventToCheck.getInterfaces()));
-
-            if(eventListeners == null || eventListeners.isEmpty()){
-                classEventToCheck = (Class<? extends Event>) classEventToCheck.getSuperclass();
-                continue;
+            if(eventListeners != null){
+                executeEventListeners(event, eventListeners, interfacesAccumulator);
             }
-
-            executeEventListeners(event, eventListeners, interfacesAccumulator);
 
             classEventToCheck = (Class<? extends Event>) classEventToCheck.getSuperclass();
         }
