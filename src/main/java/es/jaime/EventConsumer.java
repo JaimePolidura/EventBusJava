@@ -2,6 +2,7 @@ package es.jaime;
 
 import lombok.SneakyThrows;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
@@ -16,7 +17,7 @@ public final class EventConsumer {
     }
 
     @SneakyThrows
-    public void consume (Event event) {
+    public synchronized void consume (Event event) {
         Class<? extends Event> classEvent = event.getClass();
 
         if(cache.isCached(classEvent)){
@@ -52,18 +53,54 @@ public final class EventConsumer {
         }
     }
 
-    @SneakyThrows
     private void executeEventListeners (Event event, List<EventListenerInfo> eventListenerInfos, Set<Class<?>> interfacesAccumulator) {
-        for (EventListenerInfo eventListenerInfo : eventListenerInfos) {
+        for(int i = 0; i < eventListenerInfos.size(); i++) {
+            EventListenerInfo eventListenerInfo = eventListenerInfos.get(i);
+
             Object instance = eventListenerInfo.instance;
             Method method = eventListenerInfo.method;
             Class<?>[] interfaces = eventListenerInfo.eventListenerAnnotation.value();
 
             if(notInterfacesNeeded(interfaces) || containsNeededInterfaces(interfaces, interfacesAccumulator)){
-                method.invoke(instance, event);
+                boolean success = executeEventListener(method, instance, event, eventListenerInfo);
 
-                cache.put(event.getClass(), eventListenerInfo);
+                if(!success){
+                    startRollBack(eventListenerInfos, i);
+                    cache.remove(event.getClass());
+                    return;
+                }
             }
+        }
+    }
+
+    private boolean executeEventListener(Method method, Object instance, Event event, EventListenerInfo eventListenerInfo) {
+        try {
+            method.invoke(instance, event);
+            cache.put(event.getClass(), eventListenerInfo);
+
+            return true;
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+
+            return false;
+        }
+    }
+
+    private void startRollBack(List<EventListenerInfo> eventListeners, int eventListenerError) {
+        for(int i = eventListenerError; i >= 0; i--){
+            EventListenerInfo actualEventListener = eventListeners.get(i);
+
+            if(!ReflectionsUtils.containsInterface(actualEventListener.getClass(), TransactionalEventListener.class)){
+                try{
+                    throw new TransacionalEventListenerNotImplemented("TransactionalEventListener interface should be implemented " +
+                            "because the event is marked as transactional");
+                }catch (TransacionalEventListenerNotImplemented e){
+                    continue;
+                }
+            }
+
+            TransactionalEventListener transactionalEvent = (TransactionalEventListener) actualEventListener.instance;
+            transactionalEvent.rollback();
         }
     }
 

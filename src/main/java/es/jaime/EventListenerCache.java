@@ -30,6 +30,10 @@ public final class EventListenerCache {
         return new ArrayList<>(Arrays.asList(elements));
     }
 
+    public void remove(Class<? extends Event> event) {
+        this.cachedEventListeners.remove(event);
+    }
+
     public boolean isCached (Class<? extends Event> event) {
         return this.cachedEventListeners.get(event) != null;
     }

@@ -1,6 +1,7 @@
 package es.jaime;
 
 import java.lang.annotation.*;
+import java.util.function.Consumer;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

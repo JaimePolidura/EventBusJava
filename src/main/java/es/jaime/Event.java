@@ -15,4 +15,8 @@ public abstract class Event implements Comparable<Event> {
     public int compareTo(Event o) {
         return this.timeOnCreated.compareTo(o.getTimeOnCreated());
     }
+
+    public boolean isTransactional() {
+        return false;
+    }
 }
