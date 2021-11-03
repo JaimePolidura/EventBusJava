@@ -1,8 +1,8 @@
 package es.jaime;
 
+import io.vavr.control.Try;
 import lombok.SneakyThrows;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
@@ -74,33 +74,34 @@ public final class EventConsumer {
     }
 
     private boolean executeEventListener(Method method, Object instance, Event event, EventListenerInfo eventListenerInfo) {
-        try {
+        Try<Void> tryMethod = Try.run(() -> {
             method.invoke(instance, event);
             cache.put(event.getClass(), eventListenerInfo);
+        });
 
-            return true;
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-
-            return false;
-        }
+        return tryMethod.isSuccess();
     }
 
     private void startRollBack(List<EventListenerInfo> eventListeners, int eventListenerError) {
         for(int i = eventListenerError; i >= 0; i--){
             EventListenerInfo actualEventListener = eventListeners.get(i);
+            Class<?> eventListenerClass = actualEventListener.instance.getClass();
 
-            if(!ReflectionsUtils.containsInterface(actualEventListener.getClass(), TransactionalEventListener.class)){
-                try{
-                    throw new TransacionalEventListenerNotImplemented("TransactionalEventListener interface should be implemented " +
-                            "because the event is marked as transactional");
-                }catch (TransacionalEventListenerNotImplemented e){
-                    continue;
-                }
+            if(ReflectionsUtils.containsInterface(eventListenerClass, TransactionalEventListener.class)){
+                TransactionalEventListener transactionalEvent = (TransactionalEventListener) actualEventListener.instance;
+                transactionalEvent.rollback();
+            }else{
+                onTransactionalEventListenerNotImplemented();
             }
+        }
+    }
 
-            TransactionalEventListener transactionalEvent = (TransactionalEventListener) actualEventListener.instance;
-            transactionalEvent.rollback();
+    private void onTransactionalEventListenerNotImplemented() {
+        try{
+            throw new TransacionalEventListenerNotImplemented("TransactionalEventListener interface should be implemented " +
+                    "because the event is marked as transactional");
+        }catch (TransacionalEventListenerNotImplemented e){
+            e.printStackTrace();
         }
     }
 

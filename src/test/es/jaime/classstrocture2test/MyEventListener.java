@@ -1,6 +1,8 @@
 package es.jaime.classstrocture2test;
 
-public abstract class MyEventListener {
+import es.jaime.classstrocture2test.transactional.MyEventListenerTransactional;
+
+public abstract class MyEventListener extends MyEventListenerTransactional {
     private int timesRaised;
 
     public void incrementTimesRaised() {
