@@ -19,12 +19,12 @@ public final class EventBusSynch implements EventBus {
     }
 
     @Override
-    public void publish (@NonNull Collection<? extends Event> events) {
+    public synchronized void publish (@NonNull Collection<? extends Event> events) {
         events.forEach(this.eventConsumer::consume);
     }
 
     @Override
-    public void publish (@NonNull Event event) {
+    public synchronized void publish (@NonNull Event event) {
         this.eventConsumer.consume(event);
     }
 }

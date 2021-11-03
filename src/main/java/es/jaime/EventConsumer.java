@@ -1,7 +1,6 @@
 package es.jaime;
 
 import io.vavr.control.Try;
-import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -16,8 +15,7 @@ public final class EventConsumer {
         this.cache = new EventListenerCache();
     }
 
-    @SneakyThrows
-    public synchronized void consume (Event event) {
+    public void consume (Event event) {
         Class<? extends Event> classEvent = event.getClass();
 
         if(cache.isCached(classEvent)){
@@ -27,12 +25,20 @@ public final class EventConsumer {
         }
     }
 
-    @SneakyThrows
     private void executeWhatItIsInCache (Event event) {
         List<EventListenerInfo> eventListeners = cache.get(event.getClass());
 
-        for (EventListenerInfo eventListener : eventListeners) {
-            eventListener.method.invoke(eventListener.instance, event);
+        for (int i = 0; i < eventListeners.size(); i++) {
+            EventListenerInfo actualEventListenerInfo = eventListeners.get(i);
+            Method method = actualEventListenerInfo.method;
+            Object instance = actualEventListenerInfo.instance;
+
+            boolean success = executeEventListener(method, instance, event);
+
+            if(!success && event.isTransactional()){
+                startRollBack(eventListeners, i);
+                return;
+            }
         }
     }
 
@@ -62,24 +68,21 @@ public final class EventConsumer {
             Class<?>[] interfaces = eventListenerInfo.eventListenerAnnotation.value();
 
             if(notInterfacesNeeded(interfaces) || containsNeededInterfaces(interfaces, interfacesAccumulator)){
-                boolean success = executeEventListener(method, instance, event, eventListenerInfo);
+                boolean success = executeEventListener(method, instance, event);
 
-                if(!success){
+                if(!success && event.isTransactional()) {
                     startRollBack(eventListenerInfos, i);
                     cache.remove(event.getClass());
                     return;
+                }else{
+                    cache.put(event.getClass(), eventListenerInfo);
                 }
             }
         }
     }
 
-    private boolean executeEventListener(Method method, Object instance, Event event, EventListenerInfo eventListenerInfo) {
-        Try<Void> tryMethod = Try.run(() -> {
-            method.invoke(instance, event);
-            cache.put(event.getClass(), eventListenerInfo);
-        });
-
-        return tryMethod.isSuccess();
+    private boolean executeEventListener(Method method, Object instance, Event event) {
+        return Try.of(() -> method.invoke(instance, event)).isSuccess();
     }
 
     private void startRollBack(List<EventListenerInfo> eventListeners, int eventListenerError) {

@@ -42,6 +42,11 @@ public final class EventConsumerTransactionalTest {
 
         assertEquals(0, eventListenersFail.get(0).getCounter());
         assertEquals(0, eventListenersFail.get(1).getCounter());
+
+        //Test for cache
+        this.eventConsumer.consume(new MyEventTransactionalFail());
+        assertEquals(0, eventListenersFail.get(0).getCounter());
+        assertEquals(0, eventListenersFail.get(1).getCounter());
     }
 
     @Test
@@ -50,5 +55,9 @@ public final class EventConsumerTransactionalTest {
 
         assertEquals(1, eventListenersSuccess.get(0).getCounter());
         assertEquals(1, eventListenersSuccess.get(1).getCounter());
+
+        this.eventConsumer.consume(new MyEventTransactionalSuccess());
+        assertEquals(2, eventListenersSuccess.get(0).getCounter());
+        assertEquals(2, eventListenersSuccess.get(1).getCounter());
     }
 }
