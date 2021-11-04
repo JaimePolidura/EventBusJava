@@ -85,8 +85,8 @@ public class EventListener implements TransactionalEventListener{
 If some of your eventlistener fails maybe you want the event manager to call to each event listener to rollback. 
 
 To do that 
-1º) Your event class must override isTransactional() and return true
-2º) Every eventlistener should implement TransactionalEventListener
+* Your event class must override isTransactional() and return true
+* Every eventlistener should implement TransactionalEventListener
 
 ```java
 public class TransactionalEvent extends Event{
