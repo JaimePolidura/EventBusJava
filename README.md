@@ -66,6 +66,7 @@ public void on(A event) {
 
 If your event listener fails when it is getting executed the event manager will call rollback() method if you have implemented TransactionalEventListener
 
+```java
 public class EventListener implements TransactionalEventListener{
     @EventListener
     public void on(A event){
@@ -77,6 +78,51 @@ public class EventListener implements TransactionalEventListener{
         //This will be executed
     }
 }
+```
+
+### Transactional event
+
+If some of your eventlistener fails maybe you want the event manager to call to each event listener to rollback. 
+
+To do that 
+1º) Your event class must override isTransactional() and return true
+2º) Every eventlistener should implement TransactionalEventListener
+
+```java
+public class TransactionalEvent extends Event{
+    @Override
+    public boolean isTransactional() {
+        return true;
+    }
+}
+```
+
+```java
+public class EventListener1 implements TransactionalEventListener{
+    @EventListener
+    public void on(TransactionalEvent event){
+        
+    }
+    
+    @Override
+    public void rollback(){
+        //This will be executed if EventListener2 or EventListener1 fails
+    }
+}
+```
+```java
+public class EventListener2 implements TransactionalEventListener{
+    @EventListener
+    public void on(TransactionalEvent event){
+        
+    }
+    
+    @Override
+    public void rollback(){
+        //This will be executed
+    }
+}
+```
 
 ### Priority
 
