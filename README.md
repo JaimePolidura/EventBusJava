@@ -20,23 +20,12 @@ public class GameTimedOutEvent extends Event {
 
 To publish a event you have two main ways already implemented by the library. 
 
-* EventBusSynch. When a event is published, its subscriber will be executed in the same thread.
-* EventBusAsynch. When a event is published it will be enqueued in a priority queue. There will be other thread that will be reading the queue, when an event is published it will execute its subscribers.
-
-These both types implements EventBus interface
+* EventBusSynch. When a event is published, its subscriber will be executed in the same thread. This implements EventBus interface.
 
 ```java
-EventBus synchEventBus = new EventBusSynch("es.jaimetruman");
+EventBus eventbus = new EventBusSynch("es.jaimetruman");
 
-synchEventBus.publish(new GameTimedOutEvent("team 1", "team 2"));
-```
-
-To instanciate a AysnchEvent bus you have to pass the thread pool provided by Executors.
-
-```java
-EventBus asynchEventBus = new EventBusAsynch(Executors.newSingleThreadExecutor(), "myPackag");
-
-asynchEventBus.publish(new GameTimedOutEvent("team 1", "team 2"));
+eventbus.publish(new GameTimedOutEvent("team 1", "team 2"));
 ```
 
 ## LISTENERS
@@ -58,7 +47,13 @@ public void on(GameTimedOutEvent event) {
 
 If you want to listen a main class event. You can simply put the main class name in the mehtods para. Ex
 
-Consider this case: A extends Event and B extends A. 
+In this case: A extends Event and B extends A. 
+
+```java
+eventbus.publish(new A());
+eventbus.publish(new B());
+```
+This will get executed two times:
 
 ```java
 @EventListener
@@ -66,6 +61,22 @@ public void on(A event) {
     //It will listen all events of type and subtype of A
 }
 ```
+
+### Rollback
+
+If your event listener fails when it is getting executed the event manager will call rollback() method if you have implemented TransactionalEventListener
+
+public class EventListener implements TransactionalEventListener{
+    @EventListener
+    public void on(A event){
+        Integer.parseInt("this will fail");
+    }
+    
+    @Override
+    public void rollback(){
+        //This will be executed
+    }
+}
 
 ### Priority
 
@@ -82,7 +93,7 @@ public void on(A event) {
     //It will be executed the first one
 }
 ```
-### Listen to interfaces
+### Listen to certain types of events
 
 An event listener can listen an event that needs to implement a certain (or various) interface.
 
