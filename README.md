@@ -2,25 +2,58 @@
 
 This library provides a way to publish your own events and subscribe to them in a easy and powerful way.
 
+* [Set up](#set-up)
+* [Event class](#event)
+* [Publish events](#publisher)
+* [Listen to events](#listeners)
+  * [Listen to events main class](#listen-to-main-class)
+  * [Rollback](#rollback)
+  * [Transactions](#transactional-event)
+  * [Priority](#priority)
+  * [Listen certain types of events](#listen-to-certain-types-of-events)
+
+
+[click here to see transactional event](#transactional-event
+
 ## SET UP
 
 ## EVENT
 
-Each event will be represented by a class. To create you own event you have to extend Event. Event class will only have the attribute of time on created. 
+Each event will be represented by a class. To create you own event you have to extend Event. 
+
+Event classs atributes:
+* LocalDateTime timeOnCreated time when the event was instantiaded
+* UUID eventUuid generated randomly
+
+Event methods overridable (they are optional)
+* String getEventName() default "" name of the event
+* boolean isTransactional() default false [click here to see transactional event](#transactional-event)
 
 ```java
 @AllArgsConstructor
 public class GameTimedOutEvent extends Event {
     @Getter private final String team1;
     @Getter private final String tema2;
+    
+    @Override
+    public String getEventName(){
+        return "game.gametimedout";
+    }
+    
+    @Override
+    public boolean isTransactional(){
+        return true;
+    }
 }
 ```
 
 ## PUBLISHER
 
-To publish a event you have two main ways already implemented by the library. 
+To publish an event you have EventBusSynch. When a event is published, its subscriber will be executed in the same thread. This implements EventBus interface.
+It is recommended to have only one eventpublisher in memory.
 
-* EventBusSynch. When a event is published, its subscriber will be executed in the same thread. This implements EventBus interface.
+Constructor parameters:
+* String packageToScan package to look for your event listeners:
 
 ```java
 EventBus eventbus = new EventBusSynch("es.jaimetruman");
@@ -33,9 +66,9 @@ eventbus.publish(new GameTimedOutEvent("team 1", "team 2"));
 Each event listener will be represented by a method. To make this possible, the methods needs:
 
 * Be annotated with @EventListener
-* Have only one param, the Event class
+* Have only one param, the Event object
 
-!Important! The class that has the method needs to have at least one public empty constructor. The method name doesnt matter.
+!Important! The class that has the method needs to have at least one public empty constructor. The method name doesn't matter.
 
 ```java
 @EventListener
@@ -45,9 +78,11 @@ public void on(GameTimedOutEvent event) {
 ```
 ### Listen to main class
 
-If you want to listen a main class event. You can simply put the main class name in the mehtods para. Ex
+If you want to listen a main class event. You can simply put the main class name in the mehtod's parameter. Example:
 
-In this case: A extends Event and B extends A. 
+A extends Event
+
+B extends A
 
 ```java
 eventbus.publish(new A());
@@ -82,9 +117,9 @@ public class EventListener implements TransactionalEventListener{
 
 ### Transactional event
 
-If some of your eventlistener fails maybe you want the event manager to call to each event listener to rollback. 
+If some of your eventlistener fails, maybe you want the event manager to call to each event listener to rollback.
 
-To do that 
+To do that
 * Your event class must override isTransactional() and return true
 * Every eventlistener should implement TransactionalEventListener
 
@@ -148,6 +183,6 @@ Consider A implements DBTransaction interface
 ```java
 @EventListener({DBTransaction.class})
 public void on(A event) {
-    //It will listen all events of type and subtype of A that implements DBTransaction interfae
+    //It will listen to all events of type and subtype of A that implements DBTransaction interface
 }
 ```
