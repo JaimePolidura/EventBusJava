@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 @Inherited
 public @interface EventListener {
     /**
-     * If you want a events that needs to implement an interface
+     * If you want to listen certain events that needs to implement an interface
      * you can declare it in this array.
      */
     Class<?>[] value() default {};
