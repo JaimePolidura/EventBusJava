@@ -6,6 +6,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static es.jaime.ReflectionsUtils.*;
+
 public final class EventConsumer {
     private final EventsListenersMapper mapper;
     private final EventListenerCache cache;
@@ -36,8 +38,10 @@ public final class EventConsumer {
             boolean success = executeEventListener(method, instance, event);
 
             if(!success && event.isTransactional()){
-                startRollBack(eventListeners, i);
+                startAllRollbacks(eventListeners, i);
                 return;
+            }else if(!success && containsInterface(instance.getClass(), TransactionalEventListener.class)){
+                ((TransactionalEventListener) instance).rollback();
             }
         }
     }
@@ -71,9 +75,13 @@ public final class EventConsumer {
                 boolean success = executeEventListener(method, instance, event);
 
                 if(!success && event.isTransactional()) {
-                    startRollBack(eventListenerInfos, i);
+                    startAllRollbacks(eventListenerInfos, i);
                     cache.remove(event.getClass());
                     return;
+
+                }else if(!success && containsInterface(instance.getClass(), TransactionalEventListener.class)){
+                    ((TransactionalEventListener) instance).rollback();
+                    cache.put(event.getClass(), eventListenerInfo);
                 }else{
                     cache.put(event.getClass(), eventListenerInfo);
                 }
@@ -85,12 +93,12 @@ public final class EventConsumer {
         return Try.of(() -> method.invoke(instance, event)).isSuccess();
     }
 
-    private void startRollBack(List<EventListenerInfo> eventListeners, int eventListenerError) {
+    private void startAllRollbacks(List<EventListenerInfo> eventListeners, int eventListenerError) {
         for(int i = eventListenerError; i >= 0; i--){
             EventListenerInfo actualEventListener = eventListeners.get(i);
             Class<?> eventListenerClass = actualEventListener.instance.getClass();
 
-            if(ReflectionsUtils.containsInterface(eventListenerClass, TransactionalEventListener.class)){
+            if(containsInterface(eventListenerClass, TransactionalEventListener.class)){
                 TransactionalEventListener transactionalEvent = (TransactionalEventListener) actualEventListener.instance;
                 transactionalEvent.rollback();
             }else{
