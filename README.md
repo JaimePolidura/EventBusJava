@@ -20,7 +20,7 @@ This library provides a way to publish your own events and subscribe to them in 
 ```xml
 <repository>
     <id>jitpack.io</id>
-		  <url>https://jitpack.io</url>
+    <url>https://jitpack.io</url>
 </repository>
 ```
 
@@ -28,8 +28,8 @@ This library provides a way to publish your own events and subscribe to them in 
 ```xml
 <dependency>
     <groupId>com.github.JaimeTruman</groupId>
-	   <artifactId>EventBusJava</artifactId>
-	   <version>Tag</version>
+    <artifactId>EventBusJava</artifactId>
+    <version>Tag</version>
 </dependency>
 ```
 
