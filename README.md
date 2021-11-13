@@ -16,6 +16,22 @@ This library provides a way to publish your own events and subscribe to them in 
 [click here to see transactional event](#transactional-event
 
 ## SET UP
+**Repository**
+```xml
+<repository>
+    <id>jitpack.io</id>
+		  <url>https://jitpack.io</url>
+</repository>
+```
+
+**Dependency**
+```xml
+<dependency>
+    <groupId>com.github.JaimeTruman</groupId>
+	   <artifactId>EventBusJava</artifactId>
+	   <version>Tag</version>
+</dependency>
+```
 
 ## EVENT
 
