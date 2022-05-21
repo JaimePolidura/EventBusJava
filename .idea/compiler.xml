@@ -8,8 +8,10 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="PruebaEventos" />
-        <module name="EventBusJava" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="EventBusJava" target="8" />
+    </bytecodeTargetLevel>
   </component>
 </project>
