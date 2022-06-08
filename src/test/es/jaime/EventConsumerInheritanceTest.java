@@ -19,7 +19,7 @@ public final class EventConsumerInheritanceTest {
 
     @Before
     public void setUp() {
-        EventsListenersMapper mapper = new EventsListenersMapper("es.jaime.classstrocture2test");
+        EventsListenersMapper mapper = new EventsListenersMapper();
 
         List<MyEventListener> eventListenersSup = new ArrayList<>();
         for (EventListenerInfo eventListenerInfo : mapper.searchEventListeners(MyEventSuperClass.class)) {

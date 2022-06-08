@@ -15,7 +15,7 @@ public final class EventListenerMapperSimpleTest {
 
     @Before
     public void setUp() {
-        this.eventListenerMapper = new EventsListenersMapper("es.jaime.classstrocture2test");
+        this.eventListenerMapper = new EventsListenersMapper();
         this.eventListenerInfosForMyEvent = eventListenerMapper.searchEventListeners(MyEvent.class);
     }
 

@@ -3,7 +3,6 @@ package es.jaime;
 import es.jaime.classstrocture2test.transactional.MyEventListenerTransactional;
 import es.jaime.classstrocture2test.transactional.fail.MyEventTransactionalFail;
 import es.jaime.classstrocture2test.transactional.success.MyEventTransactionalSuccess;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,7 +18,7 @@ public final class EventConsumerTransactionalTest {
 
     @Before
     public void setUp() {
-        EventsListenersMapper mapper = new EventsListenersMapper("es.jaime.classstrocture2test");
+        EventsListenersMapper mapper = new EventsListenersMapper();
 
         List<MyEventListenerTransactional> eventListenersFail = new ArrayList<>();
         for (EventListenerInfo eventListenerInfo : mapper.searchEventListeners(MyEventTransactionalFail.class)) {

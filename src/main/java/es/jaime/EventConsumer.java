@@ -2,6 +2,7 @@ package es.jaime;
 
 import io.vavr.control.Try;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
@@ -90,7 +91,13 @@ public final class EventConsumer {
     }
 
     private boolean executeEventListener(Method method, Object instance, Event event) {
-        return Try.of(() -> method.invoke(instance, event)).isSuccess();
+        try {
+            method.invoke(instance, event);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private void startAllRollbacks(List<EventListenerInfo> eventListeners, int eventListenerError) {

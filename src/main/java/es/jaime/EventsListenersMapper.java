@@ -1,5 +1,6 @@
 package es.jaime;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
@@ -13,12 +14,18 @@ import java.util.stream.Stream;
 public final class EventsListenersMapper {
     private final Map<Class<? extends Event>, List<EventListenerInfo>> indexedEventListeners;
     private final Map<Class<?>, Object> alreadyInstanciedEventListeners;
+    @Getter private boolean alreadyScanned;
 
-    public EventsListenersMapper(String packageToScan) {
+    public EventsListenersMapper() {
         this.indexedEventListeners = new HashMap<>();
         this.alreadyInstanciedEventListeners = new HashMap<>();
+    }
 
-        this.searchForListeners(packageToScan);
+    public void scan(String packageToScan) {
+        if(!this.alreadyScanned){
+            this.searchForListeners(packageToScan);
+            this.alreadyScanned = true;
+        }
     }
 
     private void searchForListeners (String packageToScan) {
@@ -79,4 +86,10 @@ public final class EventsListenersMapper {
     public List<EventListenerInfo> searchEventListeners (Class<? extends Event> event) {
         return this.indexedEventListeners.get(event);
     }
+
+    public void rescan(String packageToScan){
+        this.alreadyScanned = false;
+        this.scan(packageToScan);
+    }
+
 }

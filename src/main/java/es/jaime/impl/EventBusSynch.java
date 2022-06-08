@@ -12,10 +12,12 @@ import java.util.Collection;
 public final class EventBusSynch implements EventBus {
     private final EventsListenersMapper eventsListenersMapper;
     private final EventConsumer eventConsumer;
+    private final String packageToScan;
 
     public EventBusSynch (String packageToScan) {
-        this.eventsListenersMapper = new EventsListenersMapper(packageToScan);
+        this.eventsListenersMapper = new EventsListenersMapper();
         this.eventConsumer = new EventConsumer(eventsListenersMapper);
+        this.packageToScan = packageToScan;
     }
 
     @Override
@@ -25,6 +27,9 @@ public final class EventBusSynch implements EventBus {
 
     @Override
     public synchronized void publish (@NonNull Event event) {
+        //If it has already been scanned it wont scan it
+        this.eventsListenersMapper.scan(packageToScan);
+
         this.eventConsumer.consume(event);
     }
 }

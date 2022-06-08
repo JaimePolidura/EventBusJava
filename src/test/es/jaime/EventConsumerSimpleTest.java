@@ -16,7 +16,7 @@ public final class EventConsumerSimpleTest {
 
     @Before
     public void setUp() {
-        EventsListenersMapper mapper = new EventsListenersMapper("es.jaime.classstrocture2test");
+        EventsListenersMapper mapper = new EventsListenersMapper();
 
         List<MyEventListener> eventListeners = new ArrayList<>();
         for (EventListenerInfo eventListenerInfo : mapper.searchEventListeners(MyEvent.class)) {
