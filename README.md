@@ -62,7 +62,6 @@ B extends A
 eventbus.publish(new A());
 eventbus.publish(new B());
 ```
-This will get executed two times:
 
 ```java
 @EventListener
