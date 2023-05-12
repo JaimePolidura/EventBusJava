@@ -1,24 +1,30 @@
 package es.jaime;
 
-import io.vavr.control.Try;
-
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static es.jaime.ReflectionsUtils.*;
-
 public final class EventConsumer {
-    private final EventsListenersMapper mapper;
+    private final SimpleEventListenersMapper mapper;
     private final EventListenerCache cache;
+    private final String commonPackage;
 
-    public EventConsumer(EventsListenersMapper mapper) {
-        this.mapper = mapper;
+    private boolean alreadyScanned = false;
+
+    public EventConsumer(String commonPackage) {
+        this.mapper = new SimpleEventListenersMapper();
         this.cache = new EventListenerCache();
+        this.commonPackage = commonPackage;
+    }
+
+    public EventConsumer(EventListenerDependencyProvider eventListenerDependencyProvider, String commonPackage) {
+        this.mapper = new SimpleEventListenersMapper(eventListenerDependencyProvider);
+        this.cache = new EventListenerCache();
+        this.commonPackage = commonPackage;
     }
 
     public void consume (Event event) {
+        doSimpleEventListenerScanIfNecessary();
         Class<? extends Event> classEvent = event.getClass();
 
         if(cache.isCached(classEvent)){
@@ -28,33 +34,32 @@ public final class EventConsumer {
         }
     }
 
+    private void doSimpleEventListenerScanIfNecessary() {
+        if(!this.alreadyScanned){
+            this.mapper.scan(this.commonPackage);
+            this.alreadyScanned = false;
+        }
+    }
+
     private void executeWhatItIsInCache (Event event) {
         List<EventListenerInfo> eventListeners = cache.get(event.getClass());
 
-        for (int i = 0; i < eventListeners.size(); i++) {
-            EventListenerInfo actualEventListenerInfo = eventListeners.get(i);
+        for (EventListenerInfo actualEventListenerInfo : eventListeners) {
             Method method = actualEventListenerInfo.method;
             Object instance = actualEventListenerInfo.instance;
 
-            boolean success = executeEventListener(method, instance, event);
-
-            if(!success && event.isTransactional()){
-                startAllRollbacks(eventListeners, i);
-                return;
-            }else if(!success && containsInterface(instance.getClass(), TransactionalEventListener.class)){
-                ((TransactionalEventListener) instance).rollback();
-            }
+            executeEventListener(method, instance, event);
         }
     }
 
     private void executeEventAndAddCache(Event event) {
         Class<? extends Event> classEventToCheck = event.getClass();
         Set<Class<?>> interfacesAccumulator = new HashSet<>();
-        
-        //class event not null && class not equals objecy (we wanna iterate over all events super classes)
+
+        //Iterate to all event superclasses to find listeners
         while (classEventToCheck != null && !classEventToCheck.equals(Object.class)) {
             interfacesAccumulator.addAll(Arrays.asList(classEventToCheck.getInterfaces()));
-            List<EventListenerInfo> eventListeners = mapper.searchEventListeners(classEventToCheck);
+            List<EventListenerInfo> eventListeners = mapper.findEventListenerInfoByEvent(classEventToCheck);
 
             if(eventListeners != null){
                 executeEventListeners(event, eventListeners, interfacesAccumulator);
@@ -65,60 +70,23 @@ public final class EventConsumer {
     }
 
     private void executeEventListeners (Event event, List<EventListenerInfo> eventListenerInfos, Set<Class<?>> interfacesAccumulator) {
-        for(int i = 0; i < eventListenerInfos.size(); i++) {
-            EventListenerInfo eventListenerInfo = eventListenerInfos.get(i);
-
+        for (EventListenerInfo eventListenerInfo : eventListenerInfos) {
             Object instance = eventListenerInfo.instance;
             Method method = eventListenerInfo.method;
             Class<?>[] interfaces = eventListenerInfo.eventListenerAnnotation.value();
 
-            if(notInterfacesNeeded(interfaces) || containsNeededInterfaces(interfaces, interfacesAccumulator)){
-                boolean success = executeEventListener(method, instance, event);
+            if (notInterfacesNeeded(interfaces) || containsNeededInterfaces(interfaces, interfacesAccumulator)) {
+                executeEventListener(method, instance, event);
 
-                if(!success && event.isTransactional()) {
-                    startAllRollbacks(eventListenerInfos, i);
-                    cache.remove(event.getClass());
-                    return;
-
-                }else if(!success && containsInterface(instance.getClass(), TransactionalEventListener.class)){
-                    ((TransactionalEventListener) instance).rollback();
-                    cache.put(event.getClass(), eventListenerInfo);
-                }else{
-                    cache.put(event.getClass(), eventListenerInfo);
-                }
+                cache.put(event.getClass(), eventListenerInfo);
             }
         }
     }
 
-    private boolean executeEventListener(Method method, Object instance, Event event) {
+    private void executeEventListener(Method method, Object instance, Event event) {
         try {
             method.invoke(instance, event);
-            return true;
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    private void startAllRollbacks(List<EventListenerInfo> eventListeners, int eventListenerError) {
-        for(int i = eventListenerError; i >= 0; i--){
-            EventListenerInfo actualEventListener = eventListeners.get(i);
-            Class<?> eventListenerClass = actualEventListener.instance.getClass();
-
-            if(containsInterface(eventListenerClass, TransactionalEventListener.class)){
-                TransactionalEventListener transactionalEvent = (TransactionalEventListener) actualEventListener.instance;
-                transactionalEvent.rollback();
-            }else{
-                onTransactionalEventListenerNotImplemented();
-            }
-        }
-    }
-
-    private void onTransactionalEventListenerNotImplemented() {
-        try{
-            throw new TransacionalEventListenerNotImplemented("TransactionalEventListener interface should be implemented " +
-                    "because the event is marked as transactional");
-        }catch (TransacionalEventListenerNotImplemented e){
             e.printStackTrace();
         }
     }

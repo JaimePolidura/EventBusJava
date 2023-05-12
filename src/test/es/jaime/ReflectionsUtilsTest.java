@@ -1,6 +1,5 @@
 package es.jaime;
 
-import io.vavr.control.Try;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -13,10 +12,7 @@ public final class ReflectionsUtilsTest {
         assertFalse(ReflectionsUtils.containsInterface(ClassToCheck.class, C.class));
     }
 
-
-    private class ClassToCheck implements A{
-
-    }
+    private class ClassToCheck implements A{ }
 
     interface A {}
     interface B {}

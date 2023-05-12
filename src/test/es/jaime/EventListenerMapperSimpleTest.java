@@ -10,13 +10,13 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public final class EventListenerMapperSimpleTest {
-    private EventsListenersMapper eventListenerMapper;
+    private SimpleEventListenersMapper eventListenerMapper;
     private List<EventListenerInfo> eventListenerInfosForMyEvent;
 
     @Before
     public void setUp() {
-        this.eventListenerMapper = new EventsListenersMapper();
-        this.eventListenerInfosForMyEvent = eventListenerMapper.searchEventListeners(MyEvent.class);
+        this.eventListenerMapper = new SimpleEventListenersMapper();
+        this.eventListenerInfosForMyEvent = eventListenerMapper.scan("es.jaime");
     }
 
     @Test

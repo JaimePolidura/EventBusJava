@@ -1,7 +1,6 @@
 package es.jaime.classstrocture2test.transactional.success;
 
 import es.jaime.EventListener;
-import es.jaime.TransactionalEventListener;
 import es.jaime.classstrocture2test.transactional.MyEventListenerTransactional;
 import es.jaime.classstrocture2test.transactional.fail.MyEventTransactionalFail;
 
