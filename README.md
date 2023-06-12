@@ -70,60 +70,6 @@ public void on(A event) {
 }
 ```
 
-### Rollback
-
-```java
-public class EventListener implements TransactionalEventListener{
-    @EventListener
-    public void on(A event){
-        Integer.parseInt("this will fail");
-    }
-    
-    @Override
-    public void rollback(){
-        //This will be executed
-    }
-}
-```
-
-### Transactional event
-
-```java
-public class TransactionalEvent extends Event{
-    @Override
-    public boolean isTransactional() {
-        return true;
-    }
-}
-```
-
-```java
-public class EventListener1 implements TransactionalEventListener{
-    @EventListener
-    public void on(TransactionalEvent event){
-        
-    }
-    
-    @Override
-    public void rollback(){
-        //This will be executed if EventListener2 or EventListener1 fails
-    }
-}
-```
-```java
-public class EventListener2 implements TransactionalEventListener{
-    @EventListener
-    public void on(TransactionalEvent event){
-        
-    }
-    
-    @Override
-    public void rollback(){
-        //This will be executed
-    }
-}
-```
-
 ### Priority
 
 ```java
