@@ -37,7 +37,7 @@ public final class EventConsumer {
     private void doSimpleEventListenerScanIfNecessary() {
         if(!this.alreadyScanned){
             this.mapper.scan(this.commonPackage);
-            this.alreadyScanned = false;
+            this.alreadyScanned = true;
         }
     }
 
