@@ -26,7 +26,8 @@ public final class EventListenerCache {
         }
     }
 
-    private <E> List<E> listOf (E... elements) {
+    @SafeVarargs
+    private final <E> List<E> listOf(E... elements) {
         return new ArrayList<>(Arrays.asList(elements));
     }
 

@@ -7,37 +7,24 @@ import java.util.stream.Stream;
 public final class EventConsumer {
     private final SimpleEventListenersMapper mapper;
     private final EventListenerCache cache;
-    private final String commonPackage;
-
-    private boolean alreadyScanned = false;
 
     public EventConsumer(String commonPackage) {
-        this.mapper = new SimpleEventListenersMapper();
+        this.mapper = new SimpleEventListenersMapper(commonPackage);
         this.cache = new EventListenerCache();
-        this.commonPackage = commonPackage;
     }
 
     public EventConsumer(EventListenerDependencyProvider eventListenerDependencyProvider, String commonPackage) {
-        this.mapper = new SimpleEventListenersMapper(eventListenerDependencyProvider);
+        this.mapper = new SimpleEventListenersMapper(eventListenerDependencyProvider, commonPackage);
         this.cache = new EventListenerCache();
-        this.commonPackage = commonPackage;
     }
 
     public void consume (Event event) {
-        doSimpleEventListenerScanIfNecessary();
         Class<? extends Event> classEvent = event.getClass();
 
         if(cache.isCached(classEvent)){
             executeWhatItIsInCache(event);
         }else {
             executeEventAndAddCache(event);
-        }
-    }
-
-    private void doSimpleEventListenerScanIfNecessary() {
-        if(!this.alreadyScanned){
-            this.mapper.scan(this.commonPackage);
-            this.alreadyScanned = true;
         }
     }
 
@@ -58,11 +45,16 @@ public final class EventConsumer {
 
         //Iterate to all event superclasses to find listeners
         while (classEventToCheck != null && !classEventToCheck.equals(Object.class)) {
-            interfacesAccumulator.addAll(Arrays.asList(classEventToCheck.getInterfaces()));
-            List<EventListenerInfo> eventListeners = mapper.findEventListenerInfoByEvent(classEventToCheck);
+            List<Class<?>> interfacesClassEventToCheck = Arrays.asList(classEventToCheck.getInterfaces());
+            List<EventListenerInfo> eventListenersByEventClass = mapper.findEventListenerInfoByEvent(classEventToCheck);
 
-            if(eventListeners != null){
-                executeEventListeners(event, eventListeners, interfacesAccumulator);
+            interfacesAccumulator.addAll(interfacesClassEventToCheck);
+
+            if(eventListenersByEventClass != null){
+                executeEventListeners(event, eventListenersByEventClass, interfacesAccumulator);
+            }
+            if(!interfacesClassEventToCheck.isEmpty()){
+                executeEventListenersInterfaces(event, classEventToCheck, interfacesClassEventToCheck);
             }
 
             classEventToCheck = (Class<? extends Event>) classEventToCheck.getSuperclass();
@@ -83,9 +75,24 @@ public final class EventConsumer {
         }
     }
 
-    private void executeEventListener(Method method, Object instance, Event event) {
+    private void executeEventListenersInterfaces(Event instanceEvent, Class<? extends Event> clazzEvent, List<Class<?>> interfaces) {
+        for (Class<?> interfacee : interfaces) {
+            if(!Event.class.isAssignableFrom(interfacee) || interfacee.equals(Event.class)){
+                continue;
+            }
+
+            for (EventListenerInfo eventListenerInfo : mapper.findEventListenerInfoByEvent((Class<? extends Event>) interfacee)) {
+                executeEventListener(eventListenerInfo.method, eventListenerInfo.instance, instanceEvent);
+
+                cache.put(clazzEvent, eventListenerInfo);
+                cache.put((Class<? extends Event>) interfacee, eventListenerInfo);
+            }
+        }
+    }
+
+    private void executeEventListener(Method method, Object eventListenerInstance, Event event) {
         try {
-            method.invoke(instance, event);
+            method.invoke(eventListenerInstance, event);
         } catch (Exception e) {
             e.printStackTrace();
         }

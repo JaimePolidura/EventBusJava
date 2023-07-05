@@ -15,18 +15,18 @@ public final class SimpleEventListenersMapper {
     private final Map<Class<?>, Object> alreadyInstancedEventListeners = new HashMap<>();
     private EventListenerDependencyProvider eventListenerDependencyProvider;
 
-    public SimpleEventListenersMapper(EventListenerDependencyProvider eventListenerDependencyProvider) {
+    public SimpleEventListenersMapper(EventListenerDependencyProvider eventListenerDependencyProvider, String commonPackage) {
         this.eventListenerDependencyProvider = eventListenerDependencyProvider;
+
+        searchForListeners(commonPackage);
     }
 
-    public SimpleEventListenersMapper() {}
-
-    public void scan(String packageToScan) {
-        this.searchForListeners(packageToScan);
+    public SimpleEventListenersMapper(String commnPackage) {
+        searchForListeners(commnPackage);
     }
 
     public List<EventListenerInfo> findEventListenerInfoByEvent(Class<? extends Event> event) {
-        return this.indexedEventListenersInfo.get(event);
+        return indexedEventListenersInfo.get(event);
     }
 
     private void searchForListeners (String packageToScan) {
@@ -37,7 +37,7 @@ public final class SimpleEventListenersMapper {
         Set<Method> methodsListeners = reflections.getMethodsAnnotatedWith(EventListener.class);
 
         for(Method method : methodsListeners) {
-            Class<? extends Event> getEventListened = this.getEventListened(method);
+            Class<? extends Event> getEventListened = getEventListened(method);
             addEventListener(method, getEventListened);
         }
 
@@ -45,16 +45,17 @@ public final class SimpleEventListenersMapper {
     }
 
     private Class<? extends Event> getEventListened(Method method) {
-        for (Class<?> param : method.getParameterTypes()) {
-            if(Event.class.isAssignableFrom(param)) { //Subtype of event
-                return (Class<? extends Event>) param;
-            }else{
-                break;
-            }
+        if(method.getParameterTypes().length == 0){
+            throw new IllegalArgumentException(String.format("Method %s on class %s doest listen to any event",
+                    method.getName(), method.getDeclaringClass().getName()));
         }
 
-        throw new IllegalArgumentException(String.format("Method %s on class %s should have a parameter that implements Event",
-                method.getName(), method.getDeclaringClass().getName()));
+        if(!Event.class.isAssignableFrom(method.getParameterTypes()[0])){
+            throw new IllegalArgumentException(String.format("Method %s on class %s should have a parameter that implements Event",
+                    method.getName(), method.getDeclaringClass().getName()));
+        }
+
+        return (Class<? extends Event>) method.getParameterTypes()[0];
     }
 
     private void sortEventListenerInfoByPriority () {
@@ -64,8 +65,8 @@ public final class SimpleEventListenersMapper {
     }
 
     private void addEventListener(Method method, Class<? extends Event> event) {
-        Object instanceEventListener = this.getEventListenerInfo(method.getDeclaringClass());
-        EventListener eventListenerInfo = this.getEventListenerAnnotationFromMethod(method);
+        Object instanceEventListener = getInstanceOfEventListener(method.getDeclaringClass());
+        EventListener eventListenerInfo = getEventListenerAnnotationFromMethod(method);
         List<EventListenerInfo> eventListenersInfo = indexedEventListenersInfo.get(event);
 
         if(eventListenersInfo == null || eventListenersInfo.size() == 0){
@@ -78,13 +79,13 @@ public final class SimpleEventListenersMapper {
         }
     }
 
-    private Object getEventListenerInfo(Class<?> clazz) {
+    private Object getInstanceOfEventListener(Class<?> clazz) {
         if(eventListenerDependencyProvider != null){
             return getInstanceFromEventListenerInstanceProvider(clazz);
         }
 
-        return this.alreadyInstancedEventListeners.containsKey(clazz) ?
-                this.alreadyInstancedEventListeners.get(clazz) :
+        return alreadyInstancedEventListeners.containsKey(clazz) ?
+                alreadyInstancedEventListeners.get(clazz) :
                 Try.of(clazz::newInstance).get();
     }
 
