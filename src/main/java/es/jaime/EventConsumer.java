@@ -7,15 +7,22 @@ import java.util.stream.Stream;
 public final class EventConsumer {
     private final SimpleEventListenersMapper mapper;
     private final EventListenerCache cache;
+    private final String commonPackage;
 
     public EventConsumer(String commonPackage) {
         this.mapper = new SimpleEventListenersMapper(commonPackage);
         this.cache = new EventListenerCache();
+        this.commonPackage = commonPackage;
     }
 
     public EventConsumer(EventListenerDependencyProvider eventListenerDependencyProvider, String commonPackage) {
         this.mapper = new SimpleEventListenersMapper(eventListenerDependencyProvider, commonPackage);
         this.cache = new EventListenerCache();
+        this.commonPackage = commonPackage;
+    }
+
+    public void scamForListeners() {
+        this.mapper.scanForListeners();
     }
 
     public void consume (Event event) {

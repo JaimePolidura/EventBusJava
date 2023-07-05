@@ -13,26 +13,28 @@ import java.util.stream.Stream;
 public final class SimpleEventListenersMapper {
     private final Map<Class<? extends Event>, List<EventListenerInfo>> indexedEventListenersInfo = new HashMap<>();
     private final Map<Class<?>, Object> alreadyInstancedEventListeners = new HashMap<>();
+    private final String commonPackage;
+
     private EventListenerDependencyProvider eventListenerDependencyProvider;
+
 
     public SimpleEventListenersMapper(EventListenerDependencyProvider eventListenerDependencyProvider, String commonPackage) {
         this.eventListenerDependencyProvider = eventListenerDependencyProvider;
-
-        searchForListeners(commonPackage);
+        this.commonPackage = commonPackage;
     }
 
-    public SimpleEventListenersMapper(String commnPackage) {
-        searchForListeners(commnPackage);
+    public SimpleEventListenersMapper(String commonPackage) {
+        this.commonPackage = commonPackage;
     }
 
     public List<EventListenerInfo> findEventListenerInfoByEvent(Class<? extends Event> event) {
         return indexedEventListenersInfo.get(event);
     }
 
-    private void searchForListeners (String packageToScan) {
+    public void scanForListeners() {
         Reflections reflections = new Reflections(new ConfigurationBuilder()
                 .setScanners(new MethodAnnotationsScanner())
-                .setUrls(ClasspathHelper.forPackage(packageToScan)));
+                .setUrls(ClasspathHelper.forPackage(commonPackage)));
 
         Set<Method> methodsListeners = reflections.getMethodsAnnotatedWith(EventListener.class);
 
