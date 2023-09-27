@@ -23,16 +23,6 @@
 public class GameTimedOutEvent extends Event {
     @Getter private final String team1;
     @Getter private final String tema2;
-    
-    @Override
-    public String getEventName(){
-        return "game.gametimedout";
-    }
-    
-    @Override
-    public boolean isTransactional(){
-        return true;
-    }
 }
 ```
 
@@ -54,16 +44,14 @@ public void on(GameTimedOutEvent event) {
 ```
 ### Listen to main class
 
-A extends Event
-
-B extends A
-
 ```java
+class A extends Event {}
+
+class B extends A {}
+
 eventbus.publish(new A());
 eventbus.publish(new B());
-```
 
-```java
 @EventListener
 public void on(A event) {
     //It will listen all events of type and subtype of A
@@ -84,11 +72,10 @@ public void on(A event) {
 }
 ```
 ### Listen to certain types of events
-
-A implements DBTransaction interface
-
 ```java
-@EventListener({DBTransaction.class})
+class A implements MyInterface{}
+
+@EventListener({MyInterface.class})
 public void on(A event) {
     //It will listen to all events of type and subtype of A that implements DBTransaction interface
 }
