@@ -1,4 +1,4 @@
-## SET UP
+## Set up
 **Repository**
 ```xml
 <repository>
@@ -16,7 +16,7 @@
 </dependency>
 ```
 
-## EVENT
+## Event
 
 ```java
 @AllArgsConstructor
@@ -26,7 +26,7 @@ public class GameTimedOutEvent extends Event {
 }
 ```
 
-## PUBLISHER
+## Publisher
 
 ```java
 EventBus eventbus = new EventBusSynch("es.jaimetruman");
@@ -34,7 +34,7 @@ EventBus eventbus = new EventBusSynch("es.jaimetruman");
 eventbus.publish(new GameTimedOutEvent("team 1", "team 2"));
 ```
 
-## LISTENERS
+## Listeners
 
 ```java
 @EventListener
