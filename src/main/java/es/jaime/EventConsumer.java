@@ -21,7 +21,7 @@ public final class EventConsumer {
         this.commonPackage = commonPackage;
     }
 
-    public void scamForListeners() {
+    public void scanForListeners() {
         this.mapper.scanForListeners();
     }
 

@@ -34,7 +34,7 @@ public final class EventBusSync implements EventBus {
 
     public void scanForListeners() {
         if(!alreadyScanned){
-            eventConsumer.scamForListeners();
+            eventConsumer.scanForListeners();
             alreadyScanned = true;
         }
     }
