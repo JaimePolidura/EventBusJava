@@ -1,3 +1,4 @@
+Java library that allows you to publish & listen to your custom events.
 ## Set up
 **Repository**
 ```xml
